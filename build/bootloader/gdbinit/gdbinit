@@ -1,0 +1,2 @@
+source /Users/erika/esp/Greenberg-Skobel-Project3/build/bootloader/gdbinit/symbols
+source /Users/erika/esp/Greenberg-Skobel-Project3/build/bootloader/gdbinit/connect
