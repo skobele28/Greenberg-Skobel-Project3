@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "driver/gpio.h"
 #include "esp_adc/adc_oneshot.h"
+#include "driver/ledc.h"
 
 #define PSEAT_PIN  GPIO_NUM_7       // passenger seat button pin 7
 #define DSEAT_PIN  GPIO_NUM_5       // driver seat button pin 5
@@ -20,8 +21,12 @@
 #define INT_WIPER_CONTROL      ADC_CHANNEL_9   // LDR sensor (auto headlight) ADC1 channel 0
 #define ADC_ATTEN       ADC_ATTEN_DB_12 // set ADC attenuation
 #define BITWIDTH        ADC_BITWIDTH_12 // set ADC bitwidth
-#define WIPER_MOTOR     GPIO_NUM_16
-
+#define WIPER_MOTOR     GPIO_NUM_16     // signal to motor pin 16
+#define WIPER_POTENT_OFF    500         // adcmV level for wipers off
+#define WIPER_POTENT_LOW    1570        // adcmV level for wipers low
+#define WIPER_POTENT_HI     2650        // adcmV level for wipers high
+#define WIPER_INT_SHORT     910         // adcmV level for intermittence short
+#define WIPER_INT_LONG      1960        // adcmV level for intermittence long
 
 bool dseat = false;  //Detects when the driver is seated 
 bool pseat = false;  //Detects when the passenger is seated
@@ -214,7 +219,7 @@ void app_main(void)
             hd44780_gotoxy(&lcd, 0, 0);
             hd44780_puts(&lcd, "Wipers: ");
             // if potentiometer set to off, set low beam leds to off, set lowbeam = 0
-            if(wiper_adc_mV < 500){
+            if(wiper_adc_mV < WIPER_POTENT_OFF){
                 hd44780_gotoxy(&lcd, 8, 0);
                 hd44780_puts(&lcd, "OFF ");
                 hd44780_gotoxy(&lcd, 0, 1);
@@ -222,23 +227,23 @@ void app_main(void)
                 wiper = 0;
             }
             // if potentiometer set to auto, use LDR to determine led high/low
-            else if(wiper_adc_mV >= 500 && wiper_adc_mV < 1570){
+            else if(wiper_adc_mV >= WIPER_POTENT_OFF && wiper_adc_mV < WIPER_POTENT_LOW){
                 hd44780_gotoxy(&lcd, 8, 0);
                 hd44780_puts(&lcd, "INT  ");
                 wiper = 1;
                 // if LDR high mV (daylight) for 2s, turn off low beams, set lowbeam = 0
-                if (int_wiper_adc_mV < 910){
+                if (int_wiper_adc_mV < WIPER_INT_SHORT){
                     hd44780_gotoxy(&lcd, 0, 1);
                     hd44780_puts(&lcd, "INT: SHORT");
                     }
                 
                 // if LDR low mV (dusk/night) for 1s, turn on low beams, set lowbeam = 1
-                else if (int_wiper_adc_mV >= 910 && int_wiper_adc_mV < 1960){
+                else if (int_wiper_adc_mV >= WIPER_INT_SHORT && int_wiper_adc_mV < WIPER_INT_LONG){
                     hd44780_gotoxy(&lcd, 0, 1);
                     hd44780_puts(&lcd, "INT: MED  ");
                         }
                         
-                else if (int_wiper_adc_mV >= 1960){
+                else if (int_wiper_adc_mV >= WIPER_INT_LONG){
                     hd44780_gotoxy(&lcd, 0, 1);
                     hd44780_puts(&lcd, "INT: LONG  ");
                         }
@@ -246,7 +251,7 @@ void app_main(void)
             }
                 
             // if potentiometer set to on, turn on low beams, set lowbeam = 1
-            else if(wiper_adc_mV >= 1570 && wiper_adc_mV < 2660){
+            else if(wiper_adc_mV >= WIPER_POTENT_LOW && wiper_adc_mV < WIPER_POTENT_HI){
                 hd44780_gotoxy(&lcd, 8, 0);
                 hd44780_puts(&lcd, "LOW ");
                 hd44780_gotoxy(&lcd, 0, 1);
@@ -254,7 +259,7 @@ void app_main(void)
                 wiper = 1;
             }
 
-            else if(wiper_adc_mV >= 2660){
+            else if(wiper_adc_mV >= WIPER_POTENT_HI){
                 hd44780_gotoxy(&lcd, 8, 0);
                 hd44780_puts(&lcd, "HIGH");
                 hd44780_gotoxy(&lcd, 0, 1);
