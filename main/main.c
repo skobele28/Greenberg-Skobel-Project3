@@ -54,6 +54,7 @@ int ignition_off = 0;   //keeps track of whether the ignition can be turned off
 int wiper = 0;          //keeps track of wiper setting
 int wiper_int = 0;      //keeps track of wiper intermittent setting
 
+// declare function for initializing ledc
 static void ledc_initialize(void);
 
 // Task to set wipers according to WIPER_CONTROL (potentiometer) and intermittence
