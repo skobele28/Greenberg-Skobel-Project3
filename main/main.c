@@ -41,7 +41,11 @@
 
 //Calculate the values for the minimum (0.75ms) and center (1.5ms) servo pulse widths
 #define LEDC_DUTY_MIN       (210) // Set duty to ~3.75%.
-#define LEDC_DUTY_CENTER    (614) // Set duty to ~7.5%.
+#define LEDC_DUTY_CENTER    (610) // Set duty to ~7.5%.
+
+//Calculate delays for servo motor for-loops
+#define delay_low           (1500.0/(LEDC_DUTY_CENTER - LEDC_DUTY_MIN)) // delay for LOW/INT settings, 1500ms is half-period (90 degrees)
+#define delay_high          (600.0/(LEDC_DUTY_CENTER - LEDC_DUTY_MIN)) //delay for HIGH setting, 600ms is half-period (90 degrees)
 
 bool dseat = false;     //Detects when the driver is seated 
 bool pseat = false;     //Detects when the passenger is seated
@@ -71,17 +75,20 @@ void wiper_task(void *pvParameter)
         // if wiper is set to INT, rotate to 90 degrees and back at low speed
         else if(wiper == 1){
             int i;
-            int delay = 1500/(LEDC_DUTY_CENTER - LEDC_DUTY_MIN);
-            for(i = LEDC_DUTY_MIN; i <= LEDC_DUTY_CENTER; i = i + 5){
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);
-                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
-                vTaskDelay((delay * 5)/portTICK_PERIOD_MS);
+            for(i = LEDC_DUTY_MIN; i <= LEDC_DUTY_CENTER; i = i + 8){   // increment duty count by 8
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
+                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
+                vTaskDelay((delay_low * 8)/portTICK_PERIOD_MS);         // wait 8 delay lengths
             }
-            for(i = LEDC_DUTY_CENTER; i >= LEDC_DUTY_MIN; i = i - 5){
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);
-                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
-                vTaskDelay((delay * 5)/portTICK_PERIOD_MS);
+            for(i = LEDC_DUTY_CENTER; i >= LEDC_DUTY_MIN; i = i - 8){   // increment duty count by 8
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
+                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
+                vTaskDelay((delay_low * 8)/portTICK_PERIOD_MS);         // wait 8 delay lengths
             }
+            /* the value 8 was calculated to make vTaskDelay value an integer 
+            and make duty cycle value (i) an integer
+            while maintaining the proper ratio for the expected speed*/
+
             // if intermittent SHORT, delay 1 second
             if (wiper_int == 1){
                 vTaskDelay(1000/portTICK_PERIOD_MS);
@@ -98,37 +105,41 @@ void wiper_task(void *pvParameter)
             
         // if wiper set to LOW, rotate to 90 degrees and back to min at low speed (3s period)
         else if(wiper == 2){
-            int i;
-            int delay = 1500/(LEDC_DUTY_CENTER - LEDC_DUTY_MIN);
-            for(i = LEDC_DUTY_MIN; i <= LEDC_DUTY_CENTER; i = i + 5){
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);
-                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
-                vTaskDelay((delay * 5)/portTICK_PERIOD_MS);
+            int i;            
+            for(i = LEDC_DUTY_MIN; i <= LEDC_DUTY_CENTER; i = i + 8){   // increment duty count by 8
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
+                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
+                vTaskDelay((delay_low * 8.0)/portTICK_PERIOD_MS);       // wait 8 delay lengths
             }
-            for(i = LEDC_DUTY_CENTER; i >= LEDC_DUTY_MIN; i = i - 5){
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);
-                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
-                vTaskDelay((delay * 5)/portTICK_PERIOD_MS);
+            for(i = LEDC_DUTY_CENTER; i >= LEDC_DUTY_MIN; i = i - 8){   // increment duty count by 8
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
+                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
+                vTaskDelay((delay_low * 8.0)/portTICK_PERIOD_MS);       // wait 8 delay lengths
             }
+            /* the value 8 was calculated to make vTaskDelay value an integer 
+            and make duty cycle value (i) an integer
+            while maintaining the proper ratio for the expected speed*/
         }
 
         // if wiper set to HIGH, rotate to 90 degrees and back to min at high speed (1.2s period)
         else if (wiper == 3){
             int i;
-            int delay = 600/(LEDC_DUTY_CENTER - LEDC_DUTY_MIN);
-            for(i = LEDC_DUTY_MIN; i <= LEDC_DUTY_CENTER; i = i + 10){
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);
-                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
-                vTaskDelay((delay * 10)/portTICK_PERIOD_MS);
+            for(i = LEDC_DUTY_MIN; i <= LEDC_DUTY_CENTER; i = i + 20){  // increment duty count by 20
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
+                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
+                vTaskDelay((delay_high * 20.0)/portTICK_PERIOD_MS);     // wait 20 delay lengths
             }
-            for(i = LEDC_DUTY_CENTER; i >= LEDC_DUTY_MIN; i = i - 10){
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);
-                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
-                vTaskDelay((delay * 10)/portTICK_PERIOD_MS);
+            for(i = LEDC_DUTY_CENTER; i >= LEDC_DUTY_MIN; i = i - 20){  // decrement duty count by 20
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
+                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
+                vTaskDelay((delay_high * 20.0)/portTICK_PERIOD_MS);     // wait 20 delay lengths
             }
+            /* the value 20 was calculated to make vTaskDelay value an integer 
+            and make duty cycle value (i) an integer
+            while maintaining the proper ratio for the expected speed*/
         }
-        //vTaskDelay(10/portTICK_PERIOD_MS);
     }
+    vTaskDelete(NULL);
 }
 
 void app_main(void)
@@ -397,6 +408,7 @@ void app_main(void)
     }
 }
 
+// function to configure and initialize ledc
 static void ledc_initialize(void)
 {
     // Prepare and then apply the LEDC PWM timer configuration
@@ -419,5 +431,5 @@ static void ledc_initialize(void)
         .duty           = 0, // Set duty to 0%
         .hpoint         = 0
     };
-ledc_channel_config(&ledc_channel);
+    ledc_channel_config(&ledc_channel);
 }
