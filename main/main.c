@@ -479,6 +479,9 @@ static void ledc_initialize(void)
     };
     ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
 
+    // get current duty for positional servo motor
+    int initial_duty = ledc_get_duty(LEDC_MODE, LEDC_CHANNEL);
+
     // Prepare and then apply the LEDC PWM channel configuration
     ledc_channel_config_t ledc_channel = {
         .speed_mode     = LEDC_MODE,
@@ -486,7 +489,7 @@ static void ledc_initialize(void)
         .timer_sel      = LEDC_TIMER,
         .intr_type      = LEDC_INTR_DISABLE,
         .gpio_num       = LEDC_OUTPUT_IO,
-        .duty           = 0, // Set duty to 0%
+        .duty           = initial_duty, // Set duty to current duty%
         .hpoint         = 0
     };
     ledc_channel_config(&ledc_channel);
