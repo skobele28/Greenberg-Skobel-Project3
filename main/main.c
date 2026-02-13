@@ -64,6 +64,26 @@ static void ledc_initialize(void);
 // Task to set wipers according to WIPER_CONTROL (potentiometer) and intermittence
 void wiper_task(void *pvParameter)
 {
+    // get current duty for positional servo motor
+    int initial_duty = ledc_get_duty(LEDC_MODE, LEDC_CHANNEL);
+    // if motor is not at 0 degrees, return wiper to starting position at low speed
+    if(initial_duty != LEDC_DUTY_MIN){
+        int i;
+        for(i = initial_duty; i >= LEDC_DUTY_MIN; i = i - 8){   // increment duty count by 8
+            if(i < LEDC_DUTY_MIN){
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_MIN);
+                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+            }
+            else{
+                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);          // set duty cycle to new i-value
+                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);          // update duty cycle
+                vTaskDelay((delay_low * 8.0)/portTICK_PERIOD_MS);   // wait 8 delay lengths
+            }
+        }
+            /* the value 8 was calculated to make vTaskDelay value an integer 
+            and make duty cycle value (i) an integer
+            while maintaining the proper ratio for the expected low speed*/
+    }
     while(executed != 3){
         // if wiper is set to OFF, make motor stationary at minimum angle
         if(wiper == 0){
@@ -76,18 +96,32 @@ void wiper_task(void *pvParameter)
         else if(wiper == 1){
             int i;
             for(i = LEDC_DUTY_MIN; i <= LEDC_DUTY_CENTER; i = i + 8){   // increment duty count by 8
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
-                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
-                vTaskDelay((delay_low * 8)/portTICK_PERIOD_MS);         // wait 8 delay lengths
+                if(executed == 3){vTaskDelete(NULL);}                   // if ignition is turned off, stop motor
+                if(i > LEDC_DUTY_CENTER){
+                    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_CENTER);
+                    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+                }
+                else{
+                    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
+                    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
+                    vTaskDelay((delay_low * 8)/portTICK_PERIOD_MS);         // wait 8 delay lengths
+                }
             }
             for(i = LEDC_DUTY_CENTER; i >= LEDC_DUTY_MIN; i = i - 8){   // increment duty count by 8
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
-                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
-                vTaskDelay((delay_low * 8)/portTICK_PERIOD_MS);         // wait 8 delay lengths
+                if(executed == 3){vTaskDelete(NULL);}                   // if ignition is turned off, stop motor
+                if(i < LEDC_DUTY_MIN){
+                    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_MIN);
+                    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+                }
+                else{
+                    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
+                    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
+                    vTaskDelay((delay_low * 8)/portTICK_PERIOD_MS);         // wait 8 delay lengths
+                }
             }
             /* the value 8 was calculated to make vTaskDelay value an integer 
             and make duty cycle value (i) an integer
-            while maintaining the proper ratio for the expected speed*/
+            while maintaining the proper ratio for the expected low speed*/
 
             // if intermittent SHORT, delay 1 second
             if (wiper_int == 1){
@@ -107,36 +141,64 @@ void wiper_task(void *pvParameter)
         else if(wiper == 2){
             int i;            
             for(i = LEDC_DUTY_MIN; i <= LEDC_DUTY_CENTER; i = i + 8){   // increment duty count by 8
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
-                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
-                vTaskDelay((delay_low * 8.0)/portTICK_PERIOD_MS);       // wait 8 delay lengths
+                if(executed == 3){vTaskDelete(NULL);}                   // if ignition is turned off, stop motor
+                if(i > LEDC_DUTY_CENTER){
+                    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_CENTER);
+                    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+                }
+                else{
+                    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
+                    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
+                    vTaskDelay((delay_low * 8.0)/portTICK_PERIOD_MS);       // wait 8 delay lengths
+                }
             }
             for(i = LEDC_DUTY_CENTER; i >= LEDC_DUTY_MIN; i = i - 8){   // increment duty count by 8
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
-                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
-                vTaskDelay((delay_low * 8.0)/portTICK_PERIOD_MS);       // wait 8 delay lengths
+                if(executed == 3){vTaskDelete(NULL);}                   // if ignition is turned off, stop motor
+                if(i < LEDC_DUTY_MIN){
+                    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_MIN);
+                    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+                }
+                else{
+                    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
+                    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
+                    vTaskDelay((delay_low * 8.0)/portTICK_PERIOD_MS);       // wait 8 delay lengths
+                }
             }
             /* the value 8 was calculated to make vTaskDelay value an integer 
             and make duty cycle value (i) an integer
-            while maintaining the proper ratio for the expected speed*/
+            while maintaining the proper ratio for the expected low speed*/
         }
 
         // if wiper set to HIGH, rotate to 90 degrees and back to min at high speed (1.2s period)
         else if (wiper == 3){
             int i;
             for(i = LEDC_DUTY_MIN; i <= LEDC_DUTY_CENTER; i = i + 20){  // increment duty count by 20
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
-                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
-                vTaskDelay((delay_high * 20.0)/portTICK_PERIOD_MS);     // wait 20 delay lengths
+                if(executed == 3){vTaskDelete(NULL);}                   // if ignition is turned off, stop motor
+                if(i > LEDC_DUTY_CENTER){
+                    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_CENTER);
+                    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+                }
+                else{
+                    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
+                    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
+                    vTaskDelay((delay_high * 20.0)/portTICK_PERIOD_MS);     // wait 20 delay lengths
+                }
             }
             for(i = LEDC_DUTY_CENTER; i >= LEDC_DUTY_MIN; i = i - 20){  // decrement duty count by 20
-                ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
-                ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
-                vTaskDelay((delay_high * 20.0)/portTICK_PERIOD_MS);     // wait 20 delay lengths
+                if(executed == 3){vTaskDelete(NULL);}                   // if ignition is turned off, stop motor
+                if(i < LEDC_DUTY_MIN){
+                    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_MIN);
+                    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
+                }
+                else{
+                    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, i);              // set duty cycle to new i-value
+                    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);              // update duty cycle
+                    vTaskDelay((delay_high * 20.0)/portTICK_PERIOD_MS);     // wait 20 delay lengths
+                }
             }
             /* the value 20 was calculated to make vTaskDelay value an integer 
             and make duty cycle value (i) an integer
-            while maintaining the proper ratio for the expected speed*/
+            while maintaining the proper ratio for the expected high speed*/
         }
     }
     vTaskDelete(NULL);
@@ -237,10 +299,6 @@ void app_main(void)
 
     // Set the LEDC peripheral configuration
     ledc_initialize();
-    // Set duty to 3.75% (0 degrees)
-    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY_MIN);
-    // Update duty to apply the new value
-    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
 
     while (1){
         
