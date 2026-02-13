@@ -1,11 +1,32 @@
-## What the example does
+## Project 3: Windshield Wiper System for Driver's Ed Vehicle
+Team members: Eric Greenberg and Erika Skobel
+### System Behavior
+The system implements an ignition control system and a windshield wiper system to improve safety in Driver’s Ed vehicles. The ignition system enforces basic safety requirements by ensuring that both the driver and passenger are present with their seatbelts fastened before allowing the engine to start. When the driver sits down, a welcome message is displayed. Once all safety conditions are met, a green LED lights up to indicate that ignition is enabled. If ignition is successful, the green LED turns off and the red LED lights up. If the driver does not follow all the requirements, pressing the ignition does not allow the engine to start and triggers a buzzer alarm and warning messages explaining why the ignition was denied. The system allows additional start attempts if the ignition is inhibited, as well as the ability to turn off the engine after the car is started by pressing the ignition button again. Turning off the engine also turns off the windshield wiper system, which is the new implementation to this system. The windshield wiper system includes a standard position servo motor that represents the wipers. The motor shaft rotates to a maximum angle of 90 degrees and back to 0 degrees. The user can control the wiper settings with a potentiometer knob to set them to either HIGH, LOW, INT (intermittent), or OFF. For the HIGH setting, the wiper rotates at a speed of 25 revolutions per minute. For the LOW setting, the wiper rotates at a speed of 10 revolutions per minute. For the INT setting, the user uses a second potentiometer to choose between SHORT, MED, or LONG delay times between wiper rotations. For the OFF setting, the wiper completes its last rotation and then stays still in the 0 degree position. An LCD displays the current wiper setting, and if INT is selected, it also shows the user-selected delay time.
 
-* Initializes the driver
-* Uploads custom characters
-* Displays "Hello world!"
-* Displays the custom characters
-* Displays the current sec in a loop
+### Design Alternatives
 
-## Wiring
 
-Please see the source code for pins and connections.
+### Starting Repositories
+[Ignition Subsystem](https://github.com/skobele28/Skobel-Vatanapradit-Project2.git)<br>
+[LCD Display](https://github.com/goodmangc/LCD_display_starter_code.git)
+
+### Summary of Testing Results
+**<ins>Ignition Subsystem</ins>**
+|Specification|Test Process|Results|
+|-------------|------------|-------|
+|1. Enable ignition (turn on green LED) when both seats are occupied (PS, DS) and seatbelts fastened (PB, DB). Trigger alarm and display warning messages otherwise. |4 buttons: DS, DB, PS, PB<br>1. All buttons pressed<br>2. All but two buttons (PS, PB) pressed<br>3. No buttons pressed|All tests passed.<br>1. Green LED turns on<br>2. Print “Ignition inhibited”, “Passenger seat not occupied”, “Passenger seatbelt not fastened”. Alarm triggered.<br>3. All warning messages printed and alarm triggered.|
+|2. Start engine (turn off green LED, turn on red LED) after ignition is enabled (green LED on) and ignition button is pressed (before button released).|All buttons pressed, green LED turns on, ignition button pressed|Test passed.<br>Engine light (red LED) turns on and stays on after the ignition button is pressed and released.|
+|3. Engine stays running (red LED stays on) regardless of status of seats and seatbelts|Ignition successful, press and release DS, DB, PS, and PB buttons (any order)|Test passed.<br>Engine light (red LED) remains illuminated after successful ignition.|
+|4. Successfully start the engine (light red LED, turn off green LED) after ignition is inhibited. Otherwise, alarm triggered.|1. All but one button (PS) pressed and ignition pressed<br>2. All buttons pressed and ignition pressed|All tests passed.<br>1. Print “Ignition inhibited” and “Passenger seatbelt not fastened”. Alarm triggered. Green LED on.<br>2. Green LED turns off, red LED turns on, alarm turns off|
+|5. Turn off ignition after engine is successfully started by pressing ignition button again|Ignition successful, press ignition button|Test passed.<br>Red LED is on then turns off when ignition button is pressed.|
+
+**<ins>Windshield Wiper Subsystem</ins>**
+|Specification|Test Process|Results|
+|-------------|------------|-------|
+|6. The headlights do not activate when ignition is off.|Do not press any buttons in the ignition subsystem. Turn potentiometer knob to ON.|Test passed.<br>No LEDs turn on.|
+|7. After ignition, the lowbeams turn on when headlight control is set to ON, and high beams can be activated.|Ignition successful. Turn potentiometer to ON, switch high beams on, switch high beams off|Test passed.<br>Red LED is on<br>Two yellow low beam LEDs turn on<br>Two yellow high beam LEDs turn on<br>Two yellow high beam LEDs turn off|
+|8. After ignition, the high beam LEDs do not activate when the headlight control is set to OFF.|Ignition successful, turn potentiometer to OFF, switch high beams on, switch high beams off|Test passed.<br>Red LED is on<br>Two yellow low beam LEDs turn off<br>Two yellow high beam LEDs are off|
+|9. When headlight control is set to AUTO, the low beams turn on in darkness after a 1-second delay, high beams can be activated. Headlights remain on after shadow is removed (in-between level).|Ignition successful, turn potentiometer knob to auto, simulate darkness with paper, remove paper, switch high beams on, switch high beams off|Test passed.<br>Red LED is on<br>Low beams turn on after 1 second of darkness from paper<br>Low beams stay on after paper shadow is removed<br>High beams turn on when switched on<br>High beams turn off when switched off|
+|10. When headlight control is set to AUTO, the low beams turn off in brightness after a 2-second delay, high beams cannot be activated when low beams are off. Headlights remain off after brightness is removed (in-between level).|Ignition successful, turn potentiometer knob to auto, simulate brightness with flashlight, remove flashlight, switch high beams on, switch high beams off|Test passed.<br>Red LED is on<br>Low beams turn off after 2 seconds of brightness from flashlight<br>Low beams stay off after flashlight is removed<br>High beams do not turn on when switched on<br>High beams stay off which switched off.|
+|11. High beams turn off when low beams turn off. Turn on low beams, turn on high beams, then both will turn off when headlight control is set to OFF.|Ignition successful,<br>Turn potentiometer knob to ON<br>Switch on high beams<br>Turn potentiometer knob to OFF|Test passed.<br>Red LED is on<br>Two yellow low beam LEDs turn on<br>Two yellow high beam LEDs turn on when high beams switched on<br>Two low beam LEDs and two high beam LEDs turn off when potentiometer turned to OFF|
+|12. Low beams and high beams turn off when engine is turned off.|Ignition successful, turn potentiometer knob to ON, switch on high beams, press ignition button to turn off engine and headlight system|Test passed.<br>Red LED is on<br>Two yellow low beam LEDs turn on<br>Two yellow high beam LEDs turn on when high beams switched on<br>Red LED, two low beam LEDs, and two high beam LEDs turn off when ignition button is pressed again|
